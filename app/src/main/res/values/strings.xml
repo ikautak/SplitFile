@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">SplitFile</string>
+    <string name="mb">MB / File</string>
+    <string name="split">Split</string>
+</resources>
