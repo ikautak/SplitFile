@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
 
     private TextView mFileNameText;
     private EditText mSizeEditText;
+    private EditText mShiftNumEditText;
     private Button mSplitButton;
 
     private Runnable mRunnable;
@@ -47,11 +48,19 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         // Display target file name.
         mFileNameText = (TextView)findViewById(R.id.textview_filename);
         mFileSize = get_file_size(mFilePath);
-        mFileNameText.setText(mFilePath + " : " + get_size_str(mFileSize));
+        mFileNameText.setText(String.format("%s : %s", mFilePath, get_size_str(mFileSize)));
 
         // Split file size.
         mSizeEditText = (EditText)findViewById(R.id.edittext_mb);
-        mSizeEditText.setText("3");
+        if (mSizeEditText != null) {
+            mSizeEditText.setText("3");
+        }
+
+        // Data shift num.
+        mShiftNumEditText = (EditText)findViewById(R.id.edittext_shift);
+        if (mShiftNumEditText != null) {
+            mShiftNumEditText.setText("3");
+        }
 
         // Dialog
         mDialog = new ProgressDialog(this);
@@ -88,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         final int SPLIT_SIZE = Integer.parseInt(mSizeEditText.getText().toString()) * 1024 * 1024;
         final int SPLIT_NUM = (mFileSize + SPLIT_SIZE - 1) / SPLIT_SIZE;
         final int last = mFileSize % SPLIT_SIZE;
+        final byte SHIFT_NUM = (byte)(Integer.parseInt(mShiftNumEditText.getText().toString()) & 0xff);
         if (DEBUG) Log.i(TAG, "split size " + SPLIT_SIZE + " num " + SPLIT_NUM + " last " + last);
 
         FileInputStream fis = null;
@@ -105,6 +115,10 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                 // Read
                 int l = in.read(buf, 0, read_size);
                 if (DEBUG) Log.i(TAG, "read " + l + " bytes");
+
+                if (SHIFT_NUM > 0) {
+                    shift_byte(buf, l, SHIFT_NUM);
+                }
 
                 // Write 1 file.
                 FileOutputStream fos = new FileOutputStream(mFilePath + ".frac" + i);
@@ -164,5 +178,11 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         }
 
         return size_str;
+    }
+
+    private void shift_byte(byte[] d, int len, byte shift) {
+        for (int i = 0; i < len; i++) {
+            d[i] = (byte)((d[i] + shift) & 0xff);
+        }
     }
 }
